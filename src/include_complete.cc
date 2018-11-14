@@ -15,6 +15,7 @@
 using namespace llvm;
 
 #include <thread>
+#include <log.hh>
 
 namespace ccls {
 namespace {
@@ -82,7 +83,7 @@ IncludeComplete::~IncludeComplete() {
 }
 
 void IncludeComplete::rescan() {
-  if (is_scanning || LLVM_VERSION_MAJOR >= 8)
+  if (is_scanning)
     return;
 
   completion_items.clear();
@@ -104,8 +105,9 @@ void IncludeComplete::rescan() {
         int kind = search_kind.second;
         assert(search.back() == '/');
         if (match_ && !match_->matches(search))
-          return;
+          continue;
         bool include_cpp = search.find("include/c++") != std::string::npos;
+        include_cpp |= search.find("include/g++") != std::string::npos;
 
         std::vector<CompletionCandidate> results;
         getFilesInFolder(

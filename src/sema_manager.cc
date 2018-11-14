@@ -687,6 +687,11 @@ void SemaManager::scheduleDiag(const std::string &path, int debounce) {
                           g_config->diagnostics.blacklist);
   if (!match.matches(path))
     return;
+  if (debounce == 0)
+  {
+    diag_tasks.pushBack({path, -1, debounce}, false);
+    return;
+  }
   int64_t now = chrono::duration_cast<chrono::milliseconds>(
                     chrono::high_resolution_clock::now().time_since_epoch())
                     .count();

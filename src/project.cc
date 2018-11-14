@@ -19,6 +19,7 @@
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/StringSet.h>
 #include <llvm/Support/GlobPattern.h>
+#include <llvm/Support/Host.h>
 #include <llvm/Support/LineIterator.h>
 #include <llvm/Support/Program.h>
 
@@ -129,6 +130,8 @@ struct ProjectProcessor {
         }
         if (ok)
           args.push_back(a.data());
+      } else if (a == "-include") {
+        args.push_back("-include-no-pch");
       } else if (!excludesArg(a, i)) {
         args.push_back(arg);
       }
@@ -138,8 +141,7 @@ struct ProjectProcessor {
   }
 
   void getSearchDirs(Project::Entry &entry) {
-#if LLVM_VERSION_MAJOR < 8
-    const std::string base_name = sys::path::filename(entry.filename);
+    auto base_name = sys::path::filename(entry.filename);
     size_t hash = std::hash<std::string>{}(entry.directory);
     bool OPT_o = false;
     for (auto &arg : entry.args) {
@@ -190,11 +192,10 @@ struct ProjectProcessor {
     const driver::JobList &Jobs = C->getJobs();
     if (Jobs.size() != 1)
       return;
-    const auto &CCArgs = Jobs.begin()->getArguments();
-
+    const driver::Command &Cmd = cast<driver::Command>(*Jobs.begin());
+    const llvm::opt::ArgStringList &CCArgs = Cmd.getArguments();
     auto CI = std::make_unique<CompilerInvocation>();
-    CompilerInvocation::CreateFromArgs(*CI, CCArgs.data(),
-                                       CCArgs.data() + CCArgs.size(), Diags);
+    CompilerInvocation::CreateFromArgs(*CI, CCArgs, Diags);
     CI->getFrontendOpts().DisableFree = false;
     CI->getCodeGenOpts().DisableFree = false;
 
@@ -215,7 +216,6 @@ struct ProjectProcessor {
         break;
       }
     }
-#endif
   }
 };
 
@@ -444,7 +444,9 @@ void Project::loadDirectory(const std::string &root, Project::Folder &folder) {
       entry.args.reserve(args.size());
       for (int i = 0; i < args.size(); i++) {
         doPathMapping(args[i]);
-        if (!proc.excludesArg(args[i], i))
+        if (args[i] == "-include")
+          entry.args.push_back("-include-no-pch");
+        else if (!proc.excludesArg(args[i], i))
           entry.args.push_back(intern(args[i]));
       }
       entry.compdb_size = entry.args.size();

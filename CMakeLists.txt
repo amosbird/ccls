@@ -204,10 +204,12 @@ target_sources(ccls PRIVATE
 target_sources(ccls PRIVATE
   src/messages/ccls_call.cc
   src/messages/ccls_info.cc
+  src/messages/ccls_includes.cc
   src/messages/ccls_inheritance.cc
   src/messages/ccls_member.cc
   src/messages/ccls_navigate.cc
   src/messages/ccls_reload.cc
+  src/messages/ccls_diagnostic.cc
   src/messages/ccls_vars.cc
   src/messages/initialize.cc
   src/messages/textDocument_code.cc

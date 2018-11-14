@@ -193,6 +193,8 @@ MessageHandler::MessageHandler() {
   bind("workspace/didChangeWorkspaceFolders", &MessageHandler::workspace_didChangeWorkspaceFolders);
   bind("workspace/executeCommand", &MessageHandler::workspace_executeCommand);
   bind("workspace/symbol", &MessageHandler::workspace_symbol);
+  bind("$ccls/diagnostic", &MessageHandler::ccls_diagnostic);
+  bind("$ccls/includes", &MessageHandler::ccls_includes);
   // clang-format on
 }
 
